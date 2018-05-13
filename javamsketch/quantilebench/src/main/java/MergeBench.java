@@ -14,6 +14,7 @@ public class MergeBench {
     private int columnIdx;
     private int cellSize;
     private List<Double> cellFractions;
+    private int numDuplications;
 
     private Map<String, List<Double>> methods;
     private List<Double> quantiles;
@@ -32,6 +33,7 @@ public class MergeBench {
         cellSize = conf.get("cellSize");
         List<Double> defaultCellFractions = Arrays.asList(1.0);
         cellFractions = conf.get("cellFractions", defaultCellFractions);
+        numDuplications = conf.get("numDuplications", 1);
 
         methods = conf.get("methods");
         quantiles = conf.get("quantiles");
@@ -56,6 +58,13 @@ public class MergeBench {
     private ArrayList<double[]> getCells() throws IOException {
         DataSource source = new SimpleCSVDataSource(fileName, columnIdx);
         double[] data = source.get();
+        if (numDuplications > 1) {
+            double[] dupData = new double[data.length * numDuplications];
+            for (int i = 0; i < numDuplications; i++) {
+                System.arraycopy(data, 0, dupData, data.length * i, data.length);
+            }
+            data = dupData;
+        }
         SeqDataGrouper grouper = new SeqDataGrouper(cellSize);
         return grouper.group(data);
     }
